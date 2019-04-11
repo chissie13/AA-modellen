@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+
+const int minhoogte=15;
+const int maxhoogte=20;
+
+typedef int[minhoogte,maxhoogte] waterLevel;
+
+typedef int[-1,1] requestSide;
+//0 = left outside
+//1 = right inside
+//2 = right outside
+//3 = left inside
+typedef int[0,3] signalSide;
+
+requestSide reqSide = -1;
+signalSide sigSide = 0;
+
+requestSide getReqSide(){
+    return reqSide;
+}
+
+signalSide getSigSide(){
+    return sigSide;
+}
+
+void updateSides(){
+    reqSide = getReqSide();
+    sigSide = getSigSide();
+}
+
+signalSide switchSignalPlace(){
+    if (sigSide &lt;= 2){
+        return sigSide++;
+    }
+    return 0;
+}
+
+void changeLevel(requestSide reqSide){
+    
+}
+
+bool levelEqual(requestSide reqSide){
+    
+}
+
+bool isFull(){
+    
+}
+
+void openDoor(requestSide reqSide){
+    
+}
+
+void switchSignalState(signalSide sigSide){
+    
+}
+
+bool doorIsOpen(){
+    
+}
+
+bool signalIsRed(){
+    
+}</declaration>
+	<template>
+		<name x="5" y="5">sluiskolk</name>
+		<declaration>// Place local declarations here.
+
+//hoogte water sluiskolk
+waterLevel level = 20;
+
+</declaration>
+		<location id="id0" x="476" y="238">
+		</location>
+		<init ref="id0"/>
+	</template>
+	<template>
+		<name>sluisdeur</name>
+		<location id="id1" x="102" y="68">
+			<name x="85" y="34">closing</name>
+		</location>
+		<location id="id2" x="204" y="34">
+			<name x="194" y="0">open</name>
+		</location>
+		<location id="id3" x="102" y="0">
+			<name x="85" y="-34">opening</name>
+		</location>
+		<location id="id4" x="0" y="34">
+			<name x="-25" y="0">closed</name>
+		</location>
+		<init ref="id4"/>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id4"/>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id1"/>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id2"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id3"/>
+		</transition>
+	</template>
+	<template>
+		<name>pomp</name>
+		<location id="id5" x="102" y="0">
+			<name x="92" y="-34">on</name>
+		</location>
+		<location id="id6" x="0" y="0">
+			<name x="-10" y="-34">off</name>
+		</location>
+		<init ref="id6"/>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id6"/>
+			<nail x="102" y="68"/>
+			<nail x="0" y="68"/>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id5"/>
+		</transition>
+	</template>
+	<template>
+		<name>requestHandler</name>
+		<location id="id7" x="0" y="0">
+		</location>
+		<init ref="id7"/>
+	</template>
+	<template>
+		<name>seinlamp</name>
+		<location id="id8" x="102" y="0">
+			<name x="92" y="-34">on</name>
+		</location>
+		<location id="id9" x="0" y="0">
+			<name x="-10" y="-34">off</name>
+		</location>
+		<init ref="id9"/>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id9"/>
+			<nail x="102" y="68"/>
+			<nail x="0" y="68"/>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id8"/>
+		</transition>
+	</template>
+	<template>
+		<name>mainControl</name>
+		<declaration>clock x;</declaration>
+		<location id="id10" x="306" y="-34">
+			<name x="296" y="-68">close door</name>
+		</location>
+		<location id="id11" x="178" y="-34">
+			<name x="136" y="-85">Switch Signal</name>
+			<label kind="invariant" x="153" y="-68">x&lt;=10</label>
+		</location>
+		<location id="id12" x="0" y="-34">
+			<name x="-34" y="-68">open door</name>
+		</location>
+		<location id="id13" x="-153" y="-34">
+			<name x="-229" y="-68">change level</name>
+		</location>
+		<location id="id14" x="-306" y="-34">
+			<name x="-357" y="-68">requests ready</name>
+		</location>
+		<location id="id15" x="-374" y="-34">
+			<name x="-442" y="-68">beginState</name>
+		</location>
+		<init ref="id15"/>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-195" y="51">!levelEqual(reqSide)</label>
+			<label kind="assignment" x="-204" y="34">changeLevel(reqSide)</label>
+			<nail x="-136" y="34"/>
+			<nail x="-170" y="34"/>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id15"/>
+			<nail x="340" y="-34"/>
+			<nail x="238" y="102"/>
+			<nail x="-306" y="102"/>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id13"/>
+			<label kind="assignment" x="-8" y="-178">changeReqSide()
+switchSignalPlace()</label>
+			<nail x="238" y="-136"/>
+			<nail x="-102" y="-136"/>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id11"/>
+			<label kind="guard" x="161" y="34">x&gt;=10</label>
+			<label kind="assignment" x="93" y="51">switchSignalState(sigSide)</label>
+			<nail x="212" y="34"/>
+			<nail x="144" y="34"/>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id10"/>
+			<label kind="guard" x="195" y="-34">signalIsRed()</label>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id11"/>
+			<label kind="guard" x="25" y="-17">doorIsOpen()</label>
+			<label kind="assignment" x="8" y="-34">switchSignalState(sigSide)</label>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id12"/>
+			<label kind="guard" x="-127" y="0">levelEqual(reqSide)</label>
+			<label kind="assignment" x="-136" y="-34">openDoor(reqSide)</label>
+		</transition>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-255" y="-34">isFull()</label>
+			<label kind="assignment" x="-280" y="-17">updateSides()</label>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id14"/>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+//Process = Template();
+// List one or more processes to be composed into a system.
+system sluiskolk, sluisdeur, pomp, requestHandler, seinlamp, mainControl;
+    </system>
+	<queries>
+	</queries>
+</nta>

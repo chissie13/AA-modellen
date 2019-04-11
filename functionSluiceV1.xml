@@ -1,0 +1,885 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+
+const int maxShipsInChamber = 30;
+
+const int leftHeight = 15;
+const int rightHeight = 20;
+const int amountOfSides = 2;
+const int amountOfRequestHandlers = 2;
+const int amountOfSignals = 4;
+const int amountOfDoors = 2;
+const int amountOfPumps = 2;
+
+typedef int[leftHeight,rightHeight] waterLevel;
+
+//amount of request sides
+typedef int[0,1] requestSide;
+
+//amount of request handlers
+typedef int[0, amountOfRequestHandlers - 1] handlerAmount;
+
+//0 = left outside
+//1 = right inside
+//2 = right outside
+//3 = left inside
+typedef int[0,amountOfSignals - 1] signalSide;
+
+//pump 0: water goes up
+//pump 1: water goes down
+typedef int [0, amountOfPumps - 1] pumpAmount;
+
+signalSide sigSide = 0;
+waterLevel chamberLevel = 20;
+int sailTime;
+int boatsInChamber = 0;
+
+chan door[int[0, amountOfDoors - 1]];
+
+chan request[int[0, amountOfRequestHandlers - 1]];
+chan notEnoughRequests;
+chan sail;
+chan doneSailing;
+
+chan signal[int [0, amountOfSignals - 1]];
+
+chan pumpOn[int [0, amountOfPumps - 1]];
+chan pumpOff[int [0, amountOfPumps - 1]];
+
+chan sensorOn;
+chan sensorOff;
+chan levelChanged;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+waterLevel getLevel(){
+    return level;
+}
+
+void setLevel(waterLevel setLevel){
+    level = setLevel;
+}
+
+
+requestSide getReqSide(){
+    return reqSide;
+}
+
+signalSide getSigSide(){
+    return sigSide;
+}
+
+void updateSides(){
+    reqSide = getReqSide();
+    sigSide = getSigSide();
+}
+
+
+
+signalSide switchSignalPlace(){
+    if (sigSide &lt;= 2){
+        return sigSide++;
+    }
+    return 0;
+}
+
+requestSide changeReqSide(){
+    if (reqSide == 0){
+        return 1;
+    }
+    return 0;
+}
+
+void switchDoorSides(){
+    sigSide = switchSignalPlace();
+    reqSide = changeReqSide();
+}
+
+
+
+void changeLevel(requestSide reqSide){
+    int destLevel;
+    int curLevel = getLevel();
+    if (reqSide == 0){
+        destLevel = minHeight;
+    }
+    if (reqSide == 1){
+        destLevel = maxHeight;
+    }
+    if (destLevel &gt; curLevel){
+        setLevel(curLevel++);
+    }
+    if (destLevel &lt; curLevel){
+        setLevel(curLevel--);
+    }
+}
+
+bool levelEqual(requestSide reqSide){
+    
+}
+
+bool isFull(){
+    
+}
+
+void openDoor(requestSide reqSide){
+    
+}
+
+void switchSignalState(signalSide sigSide){
+    
+}
+
+bool doorIsOpen(){
+    
+}
+
+bool signalIsRed(){
+    
+}*/</declaration>
+	<template>
+		<name x="5" y="5">sChamber</name>
+		<declaration>clock x;</declaration>
+		<location id="id0" x="306" y="238">
+			<name x="289" y="187">active</name>
+			<label kind="invariant" x="289" y="204">x &lt;= 2</label>
+		</location>
+		<location id="id1" x="170" y="238">
+			<name x="160" y="204">idle</name>
+		</location>
+		<init ref="id1"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="188" y="289">sensorOff?</label>
+			<nail x="306" y="306"/>
+			<nail x="170" y="306"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id0"/>
+			<label kind="guard" x="382" y="204">x &gt;= 2</label>
+			<label kind="synchronisation" x="382" y="238">levelChanged!</label>
+			<label kind="assignment" x="382" y="221">x = 0</label>
+			<nail x="374" y="204"/>
+			<nail x="374" y="272"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="187" y="212">sensorOn?</label>
+			<label kind="assignment" x="187" y="238">x = 0</label>
+		</transition>
+	</template>
+	<template>
+		<name>sDoor</name>
+		<parameter>requestSide reqSide</parameter>
+		<declaration>clock x;</declaration>
+		<location id="id2" x="136" y="34">
+			<name x="153" y="17">closing</name>
+			<label kind="invariant" x="153" y="34">x &lt;= 1</label>
+		</location>
+		<location id="id3" x="136" y="-102">
+			<name x="144" y="-127">open</name>
+		</location>
+		<location id="id4" x="0" y="-102">
+			<name x="8" y="-127">opening</name>
+			<label kind="invariant" x="8" y="-144">x &lt;= 1</label>
+		</location>
+		<location id="id5" x="0" y="34">
+			<name x="8" y="8">closed</name>
+		</location>
+		<init ref="id5"/>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id5"/>
+			<label kind="guard" x="25" y="51">x &gt;= 1</label>
+			<label kind="synchronisation" x="25" y="34">door[reqSide]!</label>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="144" y="-42">door[reqSide]?</label>
+			<label kind="assignment" x="144" y="-25">x := 0</label>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id3"/>
+			<label kind="guard" x="25" y="-85">x &gt;= 1</label>
+			<label kind="synchronisation" x="25" y="-102">door[reqSide]!</label>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="-93" y="-42">door[reqSide]?</label>
+			<label kind="assignment" x="-93" y="-25">x := 0</label>
+		</transition>
+	</template>
+	<template>
+		<name>sSignal</name>
+		<parameter>signalSide side</parameter>
+		<location id="id6" x="102" y="0">
+			<name x="93" y="-42">green</name>
+		</location>
+		<location id="id7" x="0" y="0">
+			<name x="-10" y="-34">red</name>
+		</location>
+		<init ref="id7"/>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="8" y="68">signal[side]?</label>
+			<nail x="102" y="68"/>
+			<nail x="0" y="68"/>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="8" y="8">signal[side]?</label>
+		</transition>
+	</template>
+	<template>
+		<name>requestHandler</name>
+		<parameter>handlerAmount handler</parameter>
+		<declaration>clock x;
+
+const int maxShipsWaiting = 30;
+
+typedef int[3,6] randomSailTime;
+
+typedef int[0, maxShipsWaiting] ships;
+
+ships shipsWaiting = 0;
+
+bool enoughForChamber(){
+    if (shipsWaiting &gt;= 1){
+        return true;
+    }
+    return false;
+}
+
+bool isFull(){
+    if (shipsWaiting == maxShipsWaiting){
+        return true;
+    }
+    return false;
+}
+
+bool isEmpty(){
+    if(shipsWaiting != 0){
+        return true;
+    }
+    return false;
+}
+ships updateAmount(){
+    if (shipsWaiting &gt; maxShipsInChamber){
+        return (shipsWaiting - maxShipsInChamber);
+    }
+    return 0;
+}
+
+void calcSailTime(int i){
+    sailTime =  shipsWaiting * i;
+}
+
+/*
+bool enoughForChamber(){
+    if (shipsWaiting &gt;= maxShipsInChamber){
+        return true;
+    }
+    return false;
+}
+*/</declaration>
+		<location id="id8" x="-136" y="68">
+			<committed/>
+		</location>
+		<location id="id9" x="-34" y="68">
+			<label kind="invariant" x="-102" y="119">x &lt;= sailTime</label>
+		</location>
+		<location id="id10" x="34" y="68">
+		</location>
+		<location id="id11" x="204" y="68">
+		</location>
+		<location id="id12" x="374" y="-34">
+			<name x="365" y="-68">Idle</name>
+		</location>
+		<location id="id13" x="-34" y="-34">
+			<name x="-17" y="-59">GettingRequests</name>
+		</location>
+		<init ref="id13"/>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id13"/>
+			<label kind="synchronisation" x="17" y="8">doneSailing?</label>
+			<nail x="17" y="17"/>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id9"/>
+			<label kind="select" x="-255" y="85">i : randomSailTime</label>
+			<label kind="assignment" x="-255" y="102">sailTime := i</label>
+			<nail x="-136" y="136"/>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id8"/>
+			<label kind="guard" x="-331" y="34">x &gt;= sailTime
+and shipsWaiting &gt; 0</label>
+			<label kind="synchronisation" x="-331" y="68">sail?</label>
+			<label kind="assignment" x="-340" y="0">shipsWaiting := shipsWaiting - 1,
+x := 0</label>
+			<nail x="-136" y="0"/>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-153" y="-25">shipsWaiting == 0</label>
+			<label kind="synchronisation" x="-119" y="-8">doneSailing!</label>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id9"/>
+			<label kind="select" x="-17" y="119">i : randomSailTime</label>
+			<label kind="synchronisation" x="-17" y="68">sail?</label>
+			<label kind="assignment" x="-17" y="85">x := 0,
+sailTime := i</label>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id10"/>
+			<label kind="guard" x="59" y="76">enoughForChamber()</label>
+			<label kind="synchronisation" x="59" y="93">request[handler]!</label>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-127" y="229">!enoughForChamber()</label>
+			<label kind="synchronisation" x="-127" y="212">notEnoughRequests!</label>
+			<nail x="204" y="204"/>
+			<nail x="-408" y="204"/>
+			<nail x="-408" y="-34"/>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="212" y="8">request[handler]?</label>
+			<nail x="204" y="-34"/>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="382" y="8">request[handler]?</label>
+			<nail x="374" y="68"/>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id12"/>
+			<label kind="guard" x="289" y="-59">isFull()</label>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-68" y="-178">!isFull() &amp;&amp;
+x &gt;= 1</label>
+			<label kind="assignment" x="-68" y="-144">shipsWaiting++,
+x := 0</label>
+			<nail x="-85" y="-102"/>
+			<nail x="17" y="-102"/>
+		</transition>
+	</template>
+	<template>
+		<name>sPump</name>
+		<parameter>pumpAmount pumps</parameter>
+		<location id="id14" x="136" y="0">
+			<name x="127" y="-34">on</name>
+		</location>
+		<location id="id15" x="-34" y="0">
+			<name x="-44" y="-34">off</name>
+		</location>
+		<init ref="id15"/>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id15"/>
+			<label kind="synchronisation" x="-25" y="68">pumpOff[pumps]?</label>
+			<nail x="136" y="68"/>
+			<nail x="-34" y="68"/>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id14"/>
+			<label kind="synchronisation" x="-17" y="0">pumpOn[pumps]?</label>
+		</transition>
+	</template>
+	<template>
+		<name>mainControl</name>
+		<declaration>clock x;
+bool doorIsOpen = false;
+bool firstTime = true;
+
+requestSide reqSide;
+signalSide sigSide;
+
+void changeChamberLevel(requestSide reqSide){
+    if (reqSide %2 == 0){
+        chamberLevel--;
+    }
+    else{
+        chamberLevel++;
+    }
+}
+
+bool levelEqualsDest(requestSide reqSide){
+    int destLevel;
+    if (reqSide == 0){
+        destLevel = leftHeight;
+    }
+    else if (reqSide == 1){
+        destLevel = rightHeight;
+    }
+    if (chamberLevel == destLevel){
+        return true;
+    }
+    return false;
+}
+
+void updateSigSide(){
+    if (sigSide &lt; 3){
+        sigSide++;
+    }
+    else{
+        sigSide = 0;
+    }
+}
+
+void switchSide(){
+    if (reqSide == 0){
+        reqSide = 1;
+    }
+    else{
+        reqSide = 0;
+    }
+}</declaration>
+		<location id="id16" x="-544" y="-646">
+			<committed/>
+		</location>
+		<location id="id17" x="-408" y="-646">
+			<name x="-433" y="-688">sailingOut</name>
+			<label kind="invariant" x="-399" y="-671">x &lt;= sailTime</label>
+		</location>
+		<location id="id18" x="-408" y="-714">
+			<name x="-433" y="-705">sailingIn</name>
+		</location>
+		<location id="id19" x="-918" y="-578">
+			<committed/>
+		</location>
+		<location id="id20" x="-918" y="-374">
+			<committed/>
+		</location>
+		<location id="id21" x="-918" y="-272">
+			<committed/>
+		</location>
+		<location id="id22" x="-1088" y="-272">
+		</location>
+		<location id="id23" x="-1258" y="-272">
+			<committed/>
+		</location>
+		<location id="id24" x="-918" y="-680">
+			<committed/>
+		</location>
+		<location id="id25" x="-1088" y="-680">
+		</location>
+		<location id="id26" x="-1258" y="-680">
+			<committed/>
+		</location>
+		<location id="id27" x="-816" y="-646">
+		</location>
+		<location id="id28" x="-680" y="-646">
+			<committed/>
+		</location>
+		<location id="id29" x="-272" y="-646">
+			<committed/>
+		</location>
+		<location id="id30" x="-136" y="-646">
+			<committed/>
+		</location>
+		<location id="id31" x="34" y="-646">
+		</location>
+		<location id="id32" x="340" y="-476">
+			<committed/>
+		</location>
+		<location id="id33" x="34" y="-476">
+			<committed/>
+		</location>
+		<location id="id34" x="-272" y="-476">
+			<committed/>
+		</location>
+		<location id="id35" x="-408" y="-476">
+		</location>
+		<location id="id36" x="-544" y="-476">
+			<committed/>
+		</location>
+		<location id="id37" x="-918" y="-476">
+			<committed/>
+		</location>
+		<location id="id38" x="-1258" y="-578">
+			<label kind="invariant" x="-1249" y="-603">x &lt;= 3</label>
+		</location>
+		<location id="id39" x="-1258" y="-374">
+			<label kind="invariant" x="-1241" y="-374">x &lt;= 3</label>
+		</location>
+		<location id="id40" x="-1428" y="-374">
+			<committed/>
+		</location>
+		<location id="id41" x="-1428" y="-578">
+			<committed/>
+		</location>
+		<location id="id42" x="-1530" y="-476">
+			<committed/>
+		</location>
+		<location id="id43" x="-1632" y="-374">
+			<name x="-1717" y="-391">beginState</name>
+		</location>
+		<init ref="id43"/>
+		<transition>
+			<source ref="id37"/>
+			<target ref="id36"/>
+			<label kind="guard" x="-816" y="-476">!levelEqualsDest(reqSide)</label>
+			<label kind="synchronisation" x="-816" y="-459">pumpOn[reqSide]!</label>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id17"/>
+			<label kind="guard" x="-450" y="-603">boatsInChamber != 0 and
+x &gt;= sailTime</label>
+			<label kind="assignment" x="-450" y="-569">x := 0,
+boatsInChamber--</label>
+			<nail x="-442" y="-612"/>
+			<nail x="-374" y="-612"/>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id16"/>
+			<label kind="guard" x="-680" y="-773">boatsInChamber == maxShipsInChamber</label>
+			<label kind="synchronisation" x="-544" y="-790">doneSailing!</label>
+			<nail x="-476" y="-748"/>
+			<nail x="-544" y="-748"/>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id18"/>
+			<label kind="guard" x="-442" y="-875">boatsInChamber &lt; maxShipsInChamber</label>
+			<label kind="synchronisation" x="-442" y="-858">sail!</label>
+			<label kind="assignment" x="-442" y="-841">boatsInChamber++</label>
+			<nail x="-374" y="-816"/>
+			<nail x="-442" y="-816"/>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id16"/>
+			<label kind="synchronisation" x="-527" y="-731">doneSailing?</label>
+			<nail x="-476" y="-714"/>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id28"/>
+			<label kind="synchronisation" x="-663" y="-671">signal[sigSide]!</label>
+			<label kind="assignment" x="-662" y="-646">updateSigSide()</label>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id16"/>
+			<label kind="guard" x="-569" y="-637">boatsInChamber == 0</label>
+		</transition>
+		<transition>
+			<source ref="id29"/>
+			<target ref="id17"/>
+			<label kind="guard" x="-365" y="-629">firstTime == false</label>
+			<label kind="assignment" x="-365" y="-646">x := 0</label>
+		</transition>
+		<transition>
+			<source ref="id29"/>
+			<target ref="id18"/>
+			<label kind="guard" x="-314" y="-722">firstTime == true</label>
+			<label kind="synchronisation" x="-314" y="-705">sail!</label>
+			<nail x="-340" y="-714"/>
+		</transition>
+		<transition>
+			<source ref="id38"/>
+			<target ref="id19"/>
+			<label kind="guard" x="-1164" y="-620">doorIsOpen == false |
+reqSide == 0</label>
+			<label kind="synchronisation" x="-1164" y="-637">request[0]?</label>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id37"/>
+			<label kind="assignment" x="-1003" y="-544">reqSide = 0,
+sigSide = 0</label>
+		</transition>
+		<transition>
+			<source ref="id24"/>
+			<target ref="id19"/>
+		</transition>
+		<transition>
+			<source ref="id39"/>
+			<target ref="id20"/>
+			<label kind="guard" x="-1164" y="-374">reqSide == 1 |
+doorIsOpen == false</label>
+			<label kind="synchronisation" x="-1164" y="-340">request[1]?</label>
+		</transition>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id37"/>
+			<label kind="assignment" x="-1003" y="-450">reqSide = 1,
+sigSide = 2</label>
+		</transition>
+		<transition>
+			<source ref="id21"/>
+			<target ref="id20"/>
+		</transition>
+		<transition>
+			<source ref="id22"/>
+			<target ref="id21"/>
+			<label kind="synchronisation" x="-1062" y="-297">door[reqSide]?</label>
+			<label kind="assignment" x="-1070" y="-272">doorIsOpen := false</label>
+		</transition>
+		<transition>
+			<source ref="id23"/>
+			<target ref="id22"/>
+			<label kind="synchronisation" x="-1215" y="-297">door[reqSide]!</label>
+		</transition>
+		<transition>
+			<source ref="id39"/>
+			<target ref="id23"/>
+			<label kind="guard" x="-1394" y="-314">doorIsOpen == true &amp;
+reqSide == 0</label>
+			<label kind="synchronisation" x="-1394" y="-331">request[1]?</label>
+		</transition>
+		<transition>
+			<source ref="id25"/>
+			<target ref="id24"/>
+			<label kind="synchronisation" x="-1062" y="-705">door[reqSide]?</label>
+			<label kind="assignment" x="-1070" y="-680">doorIsOpen := false</label>
+		</transition>
+		<transition>
+			<source ref="id26"/>
+			<target ref="id25"/>
+			<label kind="synchronisation" x="-1232" y="-705">door[reqSide]!</label>
+		</transition>
+		<transition>
+			<source ref="id38"/>
+			<target ref="id26"/>
+			<label kind="guard" x="-1394" y="-680">reqSide == 1 &amp;
+doorIsOpen == true</label>
+			<label kind="synchronisation" x="-1394" y="-646">request[0]?</label>
+		</transition>
+		<transition>
+			<source ref="id27"/>
+			<target ref="id37"/>
+			<label kind="synchronisation" x="-841" y="-595">door[reqSide]?</label>
+			<label kind="assignment" x="-841" y="-578">switchSide(),
+doorIsOpen = false,
+firstTime = false</label>
+		</transition>
+		<transition>
+			<source ref="id32"/>
+			<target ref="id30"/>
+			<label kind="guard" x="-59" y="-739">doorIsOpen == true</label>
+			<nail x="102" y="-714"/>
+			<nail x="-68" y="-714"/>
+		</transition>
+		<transition>
+			<source ref="id34"/>
+			<target ref="id35"/>
+			<label kind="guard" x="-416" y="-442">!levelEqualsDest(reqSide)</label>
+			<nail x="-272" y="-442"/>
+			<nail x="-408" y="-442"/>
+		</transition>
+		<transition>
+			<source ref="id28"/>
+			<target ref="id42"/>
+			<label kind="guard" x="-1615" y="-807">firstTime == false</label>
+			<label kind="assignment" x="-1615" y="-790">doorIsOpen = true,
+firstTime = true</label>
+			<nail x="-680" y="-816"/>
+			<nail x="-1632" y="-816"/>
+			<nail x="-1632" y="-578"/>
+		</transition>
+		<transition>
+			<source ref="id32"/>
+			<target ref="id31"/>
+			<label kind="guard" x="51" y="-637">doorIsOpen == false</label>
+			<label kind="synchronisation" x="51" y="-620">door[reqSide]!</label>
+			<nail x="170" y="-646"/>
+			<nail x="68" y="-646"/>
+		</transition>
+		<transition>
+			<source ref="id28"/>
+			<target ref="id27"/>
+			<label kind="guard" x="-790" y="-671">firstTime == true</label>
+			<label kind="synchronisation" x="-790" y="-688">door[reqSide]!</label>
+		</transition>
+		<transition>
+			<source ref="id30"/>
+			<target ref="id29"/>
+			<label kind="synchronisation" x="-255" y="-671">signal[sigSide]!</label>
+		</transition>
+		<transition>
+			<source ref="id31"/>
+			<target ref="id30"/>
+			<label kind="synchronisation" x="-85" y="-671">door[reqSide]?</label>
+		</transition>
+		<transition>
+			<source ref="id37"/>
+			<target ref="id32"/>
+			<label kind="guard" x="-807" y="-374">levelEqualsDest(reqSide)</label>
+			<nail x="-816" y="-374"/>
+			<nail x="238" y="-374"/>
+		</transition>
+		<transition>
+			<source ref="id33"/>
+			<target ref="id32"/>
+			<label kind="synchronisation" x="119" y="-476">pumpOff[reqSide]!</label>
+		</transition>
+		<transition>
+			<source ref="id34"/>
+			<target ref="id33"/>
+			<label kind="guard" x="-195" y="-476">levelEqualsDest(reqSide)</label>
+			<label kind="synchronisation" x="-195" y="-459">sensorOff!</label>
+		</transition>
+		<transition>
+			<source ref="id35"/>
+			<target ref="id34"/>
+			<label kind="synchronisation" x="-391" y="-501">levelChanged?</label>
+			<label kind="assignment" x="-391" y="-518">changeChamberLevel(reqSide)</label>
+		</transition>
+		<transition>
+			<source ref="id36"/>
+			<target ref="id35"/>
+			<label kind="synchronisation" x="-518" y="-501">sensorOn!</label>
+		</transition>
+		<transition>
+			<source ref="id38"/>
+			<target ref="id40"/>
+			<label kind="guard" x="-1300" y="-510">x &gt;= 3</label>
+			<label kind="synchronisation" x="-1300" y="-527">notEnoughRequests?</label>
+		</transition>
+		<transition>
+			<source ref="id39"/>
+			<target ref="id41"/>
+			<label kind="guard" x="-1300" y="-459">x &gt;= 3</label>
+			<label kind="synchronisation" x="-1300" y="-442">notEnoughRequests?</label>
+		</transition>
+		<transition>
+			<source ref="id41"/>
+			<target ref="id38"/>
+			<label kind="synchronisation" x="-1385" y="-578">request[0]!</label>
+			<label kind="assignment" x="-1385" y="-561">x := 0</label>
+		</transition>
+		<transition>
+			<source ref="id40"/>
+			<target ref="id39"/>
+			<label kind="synchronisation" x="-1385" y="-408">request[1]!</label>
+			<label kind="assignment" x="-1385" y="-391">x := 0</label>
+		</transition>
+		<transition>
+			<source ref="id42"/>
+			<target ref="id40"/>
+			<label kind="guard" x="-1581" y="-399">levelEqualsDest(1)</label>
+		</transition>
+		<transition>
+			<source ref="id42"/>
+			<target ref="id41"/>
+			<label kind="guard" x="-1581" y="-569">levelEqualsDest(0)</label>
+		</transition>
+		<transition>
+			<source ref="id43"/>
+			<target ref="id42"/>
+			<label kind="assignment" x="-1742" y="-450">chamberLevel := leftHeight</label>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+//Process = Template();
+// List one or more processes to be composed into a system.
+system sChamber, sDoor, sPump, requestHandler, sSignal, mainControl;</system>
+	<queries>
+		<query>
+			<formula>boatsInChamber &gt;= 1 --&gt; boatsInChamber == 0
+			</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>A[] (sPump(0).on or sPump(1).on imply sDoor(0).closed and sDoor(1).closed)
+			</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>A[] (not sDoor(1).closed imply sDoor(0).closed)
+			</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>A[] (not sDoor(0).closed imply sDoor(1).closed)
+			</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>A[] (sSignal(3).green imply (sDoor(0).open and sDoor(1).closed))
+			</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>A[] (sSignal(2).green imply (sDoor(1).open and sDoor(0).closed))
+			</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>A[] (sSignal(1).green imply (sDoor(1).open and sDoor(0).closed))
+			</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>A[] (sSignal(0).green imply (sDoor(0).open and sDoor(1).closed))
+			</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>A[] not deadlock
+			</formula>
+			<comment>
+			</comment>
+		</query>
+	</queries>
+</nta>

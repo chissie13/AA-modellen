@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+
+const int minHeight=15;
+const int maxHeight=20;
+const int amountOfRequestHandlers = 1;
+const int amountOfSignals = 4;
+const int maxShipsInChamber = 1;
+
+typedef int[minHeight,maxHeight] waterLevel;
+
+typedef int[0,1] requestSide;
+typedef int[0, amountOfRequestHandlers - 1] handlerAmount;
+//0 = left outside
+//1 = right inside
+//2 = right outside
+//3 = left inside
+typedef int[0,3] signalSide;
+
+requestSide reqSide = 0;
+signalSide sigSide = 0;
+waterLevel level = 20;
+
+chan door[int[0,1]];
+chan requests[int[0, amountOfRequestHandlers - 1]];
+chan signal[int [0, amountOfSignals - 1]];
+
+chan request;
+
+
+/*
+waterLevel getLevel(){
+    return level;
+}
+
+void setLevel(waterLevel setLevel){
+    level = setLevel;
+}
+
+
+requestSide getReqSide(){
+    return reqSide;
+}
+
+signalSide getSigSide(){
+    return sigSide;
+}
+
+void updateSides(){
+    reqSide = getReqSide();
+    sigSide = getSigSide();
+}
+
+
+
+signalSide switchSignalPlace(){
+    if (sigSide &lt;= 2){
+        return sigSide++;
+    }
+    return 0;
+}
+
+requestSide changeReqSide(){
+    if (reqSide == 0){
+        return 1;
+    }
+    return 0;
+}
+
+void switchDoorSides(){
+    sigSide = switchSignalPlace();
+    reqSide = changeReqSide();
+}
+
+
+
+void changeLevel(requestSide reqSide){
+    int destLevel;
+    int curLevel = getLevel();
+    if (reqSide == 0){
+        destLevel = minHeight;
+    }
+    if (reqSide == 1){
+        destLevel = maxHeight;
+    }
+    if (destLevel &gt; curLevel){
+        setLevel(curLevel++);
+    }
+    if (destLevel &lt; curLevel){
+        setLevel(curLevel--);
+    }
+}
+
+bool levelEqual(requestSide reqSide){
+    
+}
+
+bool isFull(){
+    
+}
+
+void openDoor(requestSide reqSide){
+    
+}
+
+void switchSignalState(signalSide sigSide){
+    
+}
+
+bool doorIsOpen(){
+    
+}
+
+bool signalIsRed(){
+    
+}*/</declaration>
+	<template>
+		<name x="5" y="5">sluiskolk</name>
+		<declaration>// Place local declarations here.
+
+//hoogte water sluiskolk
+</declaration>
+		<location id="id0" x="476" y="238">
+		</location>
+		<init ref="id0"/>
+	</template>
+	<template>
+		<name>sluisdeur</name>
+		<parameter>requestSide reqSide</parameter>
+		<location id="id1" x="102" y="68">
+			<name x="85" y="34">closing</name>
+		</location>
+		<location id="id2" x="204" y="34">
+			<name x="194" y="0">open</name>
+		</location>
+		<location id="id3" x="102" y="0">
+			<name x="85" y="-34">opening</name>
+		</location>
+		<location id="id4" x="0" y="34">
+			<name x="-25" y="0">closed</name>
+		</location>
+		<init ref="id4"/>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="-17" y="51">door[reqSide]!</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="144" y="51">door[reqSide]?</label>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="136" y="-17">door[reqSide]!</label>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="0" y="-17">door[reqSide]?</label>
+		</transition>
+	</template>
+	<template>
+		<name>pomp</name>
+		<location id="id5" x="102" y="0">
+			<name x="92" y="-34">on</name>
+		</location>
+		<location id="id6" x="0" y="0">
+			<name x="-10" y="-34">off</name>
+		</location>
+		<init ref="id6"/>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id6"/>
+			<nail x="102" y="68"/>
+			<nail x="0" y="68"/>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id5"/>
+		</transition>
+	</template>
+	<template>
+		<name>requestHandler</name>
+		<parameter>handlerAmount handler</parameter>
+		<declaration>const int maxShipsWaiting = 5;
+typedef int[0, maxShipsWaiting] ships;
+
+ships shipsWaitingLeft = 0;
+ships shipsWaitingRight = 0;
+clock x;
+
+bool isFull(){
+    if (shipsWaitingLeft == maxShipsWaiting){
+        return true;
+    }
+    return false;
+}
+
+void updateList(){
+    if (shipsWaitingLeft == maxShipsWaiting){
+        shipsWaitingLeft = 0;
+    }
+    if (shipsWaitingRight == maxShipsWaiting){
+        shipsWaitingRight = 0;
+    }
+    x=0;
+}
+
+requestSide getSide(){
+    if (shipsWaitingLeft == maxShipsWaiting){
+        return 0;
+    }
+    return 1;
+}</declaration>
+		<location id="id7" x="136" y="68">
+		</location>
+		<location id="id8" x="238" y="-34">
+			<name x="229" y="-68">Idle</name>
+		</location>
+		<location id="id9" x="68" y="-34">
+			<name x="-51" y="-51">GettingRequests</name>
+		</location>
+		<init ref="id9"/>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id9"/>
+			<label kind="synchronisation" x="-59" y="17">requestLeft!</label>
+			<label kind="assignment" x="-59" y="34">shipsWaitingLeft-=maxShipsInChamber</label>
+			<nail x="68" y="68"/>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="178" y="8">request?</label>
+			<nail x="238" y="68"/>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id8"/>
+			<label kind="guard" x="127" y="-34">isFull()</label>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id9"/>
+			<label kind="guard" x="34" y="-144">!isFull()</label>
+			<label kind="assignment" x="34" y="-127">shipsWaitingLeft++</label>
+			<nail x="17" y="-102"/>
+			<nail x="119" y="-102"/>
+		</transition>
+	</template>
+	<template>
+		<name>seinlamp</name>
+		<parameter>signalSide side</parameter>
+		<location id="id10" x="102" y="0">
+			<name x="92" y="-34">on</name>
+		</location>
+		<location id="id11" x="0" y="0">
+			<name x="-10" y="-34">off</name>
+		</location>
+		<init ref="id11"/>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<nail x="102" y="68"/>
+			<nail x="0" y="68"/>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id10"/>
+			<label kind="synchronisation" x="17" y="-25">signal[side]?</label>
+		</transition>
+	</template>
+	<template>
+		<name>mainControl</name>
+		<declaration>clock x;</declaration>
+		<location id="id12" x="68" y="34">
+			<name x="34" y="51">signalGreen</name>
+		</location>
+		<location id="id13" x="306" y="-34">
+			<name x="296" y="-68">closeDoor</name>
+		</location>
+		<location id="id14" x="178" y="-34">
+			<name x="144" y="-68">SwitchSignal</name>
+		</location>
+		<location id="id15" x="0" y="-34">
+			<name x="-25" y="-68">openDoor</name>
+		</location>
+		<location id="id16" x="-136" y="-34">
+			<name x="-204" y="-68">changeLevel</name>
+		</location>
+		<location id="id17" x="-408" y="-34">
+			<name x="-493" y="-51">beginState</name>
+		</location>
+		<init ref="id17"/>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id16"/>
+			<label kind="synchronisation" x="-306" y="-34">request?</label>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id12"/>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id16"/>
+			<nail x="-102" y="34"/>
+			<nail x="-170" y="34"/>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id17"/>
+			<nail x="340" y="-34"/>
+			<nail x="238" y="102"/>
+			<nail x="-306" y="102"/>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id16"/>
+			<label kind="synchronisation" x="76" y="-161">door[0]?</label>
+			<nail x="238" y="-136"/>
+			<nail x="0" y="-136"/>
+		</transition>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id14"/>
+			<nail x="212" y="34"/>
+			<nail x="144" y="34"/>
+		</transition>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id13"/>
+			<label kind="synchronisation" x="212" y="-34">door[0]!</label>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id14"/>
+			<label kind="synchronisation" x="51" y="-34">door[0]?</label>
+			<nail x="17" y="-34"/>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id15"/>
+			<label kind="synchronisation" x="-93" y="-34">door[0]!</label>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+//Process = Template();
+// List one or more processes to be composed into a system.
+system sluiskolk, sluisdeur, pomp, requestHandler, seinlamp, mainControl;
+    </system>
+	<queries>
+	</queries>
+</nta>
